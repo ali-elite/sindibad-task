@@ -101,3 +101,37 @@ class TicketService:
             return True
 
         return False
+
+    async def get_corner_case_stats(self) -> Dict[str, Any]:
+        """Get comprehensive corner case statistics."""
+        return await self.repository.get_corner_case_stats()
+
+    async def get_problematic_tickets(self, limit: int = 20) -> List[Ticket]:
+        """Get tickets that represent corner cases."""
+        return await self.repository.get_problematic_tickets(limit)
+
+    def _is_corner_case_ticket(self, ticket: Ticket) -> bool:
+        """Check if a ticket represents a corner case."""
+        # Low confidence (< 50%)
+        if ticket.current_tag.confidence < 0.5:
+            return True
+
+        # Default fallback tags
+        if ticket.current_tag.is_default_tag:
+            return True
+
+        # Missing classifications
+        if not ticket.current_tag.service_type or not ticket.current_tag.category:
+            return True
+
+        # Very short or very long conversations
+        user_messages = ticket.get_user_messages()
+        if len(user_messages) == 0 or len(user_messages) > 10:
+            return True
+
+        # Short message content
+        combined_text = ticket.get_combined_text()
+        if len(combined_text.strip()) < 10:
+            return True
+
+        return False

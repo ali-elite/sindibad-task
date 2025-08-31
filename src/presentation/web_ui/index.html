@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="container mx-auto px-4 py-8">
@@ -17,63 +18,300 @@
                         Sindibad Ticket Tagging Dashboard
                     </h1>
                     <p class="text-gray-600">
-                        Real-time monitoring of ticket tagging and routing system
+                        Real-time monitoring of automated ticket tagging system
                     </p>
                 </div>
-                <div>
-                    <a href="/dashboard/chat" 
+                <div class="flex gap-4">
+                    <a href="/dashboard/chat"
                        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                         💬 Chat Mock
                     </a>
+                    <button onclick="toggleKPIMode()"
+                            class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                        📊 KPI Focus
+                    </button>
+                    <button onclick="toggleCornerCases()"
+                            class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                        ⚠️ Corner Cases
+                    </button>
                 </div>
             </div>
         </header>
 
-        <!-- Statistics Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <!-- North Star KPI Section -->
+        <div id="north-star-section" class="mb-8 hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-lg p-6 text-white">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2">North Star Metric</h2>
+                        <div class="text-4xl font-bold mb-2" id="north-star-value">0%</div>
+                        <p class="text-blue-100">Target: 85% Automation Rate</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm opacity-75">Weekly Trend</div>
+                        <div class="text-2xl" id="north-star-trend">↗️ +5.2%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secondary KPIs -->
+        <div id="secondary-kpis" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 hidden">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">High Confidence Rate</h3>
+                <p class="text-3xl font-bold text-green-600" id="high-confidence">0%</p>
+                <p class="text-sm text-gray-500">Target: >75%</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Avg Tagging Accuracy</h3>
+                <p class="text-3xl font-bold text-blue-600" id="avg-accuracy">0%</p>
+                <p class="text-sm text-gray-500">Target: >80%</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Untagged Rate</h3>
+                <p class="text-3xl font-bold text-red-600" id="untagged-rate">0%</p>
+                <p class="text-sm text-gray-500">Target: <5%</p>
+            </div>
+        </div>
+
+        <!-- Enhanced Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-6 gap-6 mb-8">
             <div class="bg-white rounded-lg shadow p-6">
                 <h3 class="text-lg font-semibold text-gray-700 mb-2">Total Tickets</h3>
                 <p class="text-3xl font-bold text-blue-600" id="total-tickets">0</p>
+                <p class="text-sm text-gray-500" id="recent-tickets">+0 in 24h</p>
             </div>
             <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-lg font-semibold text-gray-700 mb-2">Open Tickets</h3>
-                <p class="text-3xl font-bold text-yellow-600" id="open-tickets">0</p>
-            </div>
-            <div class="bg-white rounded-lg shadow p-6">
-                <h3 class="text-lg font-semibold text-gray-700 mb-2">Closed Tickets</h3>
-                <p class="text-3xl font-bold text-green-600" id="closed-tickets">0</p>
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Automation Rate</h3>
+                <p class="text-3xl font-bold text-green-600" id="automation-rate">0%</p>
+                <p class="text-sm text-gray-500" id="automated-count">0 automated</p>
             </div>
             <div class="bg-white rounded-lg shadow p-6">
                 <h3 class="text-lg font-semibold text-gray-700 mb-2">Avg Confidence</h3>
                 <p class="text-3xl font-bold text-purple-600" id="avg-confidence">0%</p>
+                <p class="text-sm text-gray-500" id="confidence-range">0% - 0%</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">High Confidence</h3>
+                <p class="text-3xl font-bold text-emerald-600" id="high-confidence-rate">0%</p>
+                <p class="text-sm text-gray-500">≥80% confidence</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Open Tickets</h3>
+                <p class="text-3xl font-bold text-yellow-600" id="open-tickets">0</p>
+                <p class="text-sm text-gray-500" id="open-percentage">0% of total</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Untagged Rate</h3>
+                <p class="text-3xl font-bold text-red-600" id="untagged-rate-card">0%</p>
+                <p class="text-sm text-gray-500" id="tagged-count">0 tagged</p>
             </div>
         </div>
 
-        <!-- Service Distribution -->
-        <div class="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">Service Distribution</h2>
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4" id="service-distribution">
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-blue-600" id="flight-count">0</div>
-                    <div class="text-sm text-gray-600">Flight</div>
+        <!-- Corner Cases Alert Section -->
+        <div class="bg-gradient-to-r from-red-600 to-orange-600 rounded-lg shadow-lg p-6 mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-white mb-2">⚠️ Corner Cases Alert</h2>
+                    <div class="text-4xl font-bold mb-2" id="corner-case-rate">0%</div>
+                    <p class="text-red-100">Tickets requiring attention</p>
                 </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-green-600" id="hotel-count">0</div>
-                    <div class="text-sm text-gray-600">Hotel</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-red-600" id="visa-count">0</div>
-                    <div class="text-sm text-gray-600">Visa</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-purple-600" id="esim-count">0</div>
-                    <div class="text-sm text-gray-600">eSIM</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-yellow-600" id="wallet-count">0</div>
-                    <div class="text-sm text-gray-600">Wallet</div>
+                <div class="text-right">
+                    <div class="text-sm opacity-75">Total Issues</div>
+                    <div class="text-2xl" id="corner-case-count">0</div>
+                    <button class="bg-white text-red-600 px-4 py-2 rounded mt-2 hover:bg-red-50"
+                            onclick="toggleCornerCases()">
+                        View Details
+                    </button>
                 </div>
             </div>
+        </div>
+
+        <!-- Corner Cases Detailed View (Hidden by default) -->
+        <div id="corner-cases-section" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 hidden">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Low Confidence</h3>
+                <p class="text-3xl font-bold text-red-600" id="low-confidence-count">0</p>
+                <p class="text-sm text-gray-500" id="low-confidence-rate">0%</p>
+                <p class="text-xs text-gray-400 mt-2">Confidence < 50%</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Default Fallbacks</h3>
+                <p class="text-3xl font-bold text-orange-600" id="default-fallback-count">0</p>
+                <p class="text-sm text-gray-500" id="default-fallback-rate">0%</p>
+                <p class="text-xs text-gray-400 mt-2">Other/Others tags</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Missing Classifications</h3>
+                <p class="text-3xl font-bold text-yellow-600" id="missing-classification-count">0</p>
+                <p class="text-sm text-gray-500" id="missing-classification-rate">0%</p>
+                <p class="text-xs text-gray-400 mt-2">Null service/category</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-700 mb-2">Severity Level</h3>
+                <p class="text-3xl font-bold text-purple-600" id="critical-count">0</p>
+                <p class="text-sm text-gray-500">Critical issues</p>
+                <p class="text-xs text-gray-400 mt-2">Requires immediate action</p>
+            </div>
+        </div>
+
+        <!-- Corner Cases Charts Row -->
+        <div id="corner-cases-charts" class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8 hidden">
+            <!-- Confidence Distribution Chart -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Confidence Distribution</h2>
+                <canvas id="confidenceChart" width="400" height="200"></canvas>
+                <div class="grid grid-cols-4 gap-2 mt-4 text-center">
+                    <div>
+                        <div class="text-sm font-bold text-red-600" id="very-low-count">0</div>
+                        <div class="text-xs text-gray-600">0-30%</div>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-orange-600" id="low-count">0</div>
+                        <div class="text-xs text-gray-600">30-50%</div>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-yellow-600" id="medium-count">0</div>
+                        <div class="text-xs text-gray-600">50-70%</div>
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-green-600" id="high-count">0</div>
+                        <div class="text-xs text-gray-600">70-100%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Problematic Tickets Table -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Recent Problematic Tickets</h2>
+                <div class="overflow-x-auto max-h-64">
+                    <table class="min-w-full table-auto" id="problematic-tickets-table">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    ID
+                                </th>
+                                <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Issues
+                                </th>
+                                <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Confidence
+                                </th>
+                                <th class="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Preview
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="4" class="px-4 py-4 text-center text-gray-500">
+                                    <div class="flex items-center justify-center">
+                                        <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-red-600"></div>
+                                        <span class="ml-2">Loading problematic tickets...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Charts Row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Service Distribution Chart -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Service Distribution</h2>
+                <canvas id="serviceChart" width="400" height="200"></canvas>
+                <div class="grid grid-cols-5 gap-4 mt-4" id="service-distribution">
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-blue-600" id="flight-count">0</div>
+                        <div class="text-sm text-gray-600">Flight</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-green-600" id="hotel-count">0</div>
+                        <div class="text-sm text-gray-600">Hotel</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-red-600" id="visa-count">0</div>
+                        <div class="text-sm text-gray-600">Visa</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-purple-600" id="esim-count">0</div>
+                        <div class="text-sm text-gray-600">eSIM</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-lg font-bold text-yellow-600" id="wallet-count">0</div>
+                        <div class="text-sm text-gray-600">Wallet</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tagging Method Distribution -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Tagging Methods</h2>
+                <canvas id="methodChart" width="400" height="200"></canvas>
+                <div class="mt-4" id="method-distribution">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm text-gray-600">Keywords:</span>
+                        <span class="font-semibold" id="keywords-count">0</span>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm text-gray-600">Agentic AI:</span>
+                        <span class="font-semibold" id="agentic-count">0</span>
+                    </div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm text-gray-600">Manual:</span>
+                        <span class="font-semibold" id="manual-count">0</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Default:</span>
+                        <span class="font-semibold" id="default-count">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Distribution -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Category Distribution</h2>
+            <canvas id="categoryChart" width="800" height="200"></canvas>
+            <div class="grid grid-cols-3 md:grid-cols-7 gap-4 mt-4" id="category-distribution">
+                <div class="text-center">
+                    <div class="text-lg font-bold text-blue-600" id="cancellation-count">0</div>
+                    <div class="text-sm text-gray-600">Cancellation</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-lg font-bold text-green-600" id="modify-count">0</div>
+                    <div class="text-sm text-gray-600">Modify</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-lg font-bold text-purple-600" id="topup-count">0</div>
+                    <div class="text-sm text-gray-600">Top Up</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-lg font-bold text-red-600" id="withdraw-count">0</div>
+                    <div class="text-sm text-gray-600">Withdraw</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-lg font-bold text-yellow-600" id="recheck-count">0</div>
+                    <div class="text-sm text-gray-600">Order Re-Check</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-lg font-bold text-indigo-600" id="prepurchase-count">0</div>
+                    <div class="text-sm text-gray-600">Pre-Purchase</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-lg font-bold text-gray-600" id="others-count">0</div>
+                    <div class="text-sm text-gray-600">Others</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trends Chart -->
+        <div class="bg-white rounded-lg shadow p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Performance Trends (Last 7 Days)</h2>
+            <canvas id="trendsChart" width="800" height="300"></canvas>
         </div>
 
         <!-- Recent Tickets Table -->
@@ -108,6 +346,9 @@
                                 Confidence
                             </th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Method
+                            </th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Status
                             </th>
                             <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -117,7 +358,7 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         <tr>
-                            <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                            <td colspan="9" class="px-4 py-8 text-center text-gray-500">
                                 <div class="flex items-center justify-center">
                                     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                                     <span class="ml-2">Loading tickets...</span>
@@ -131,37 +372,241 @@
     </div>
 
     <script>
+        let kpiMode = false;
+        let cornerCasesMode = false;
+        let serviceChart, methodChart, categoryChart, trendsChart, confidenceChart;
+
+        // Initialize charts
+        function initializeCharts() {
+            // Service Distribution Chart
+            const serviceCtx = document.getElementById('serviceChart').getContext('2d');
+            serviceChart = new Chart(serviceCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Flight', 'Hotel', 'Visa', 'eSIM', 'Wallet', 'Other'],
+                    datasets: [{
+                        data: [0, 0, 0, 0, 0, 0],
+                        backgroundColor: [
+                            '#3B82F6', '#10B981', '#EF4444', '#8B5CF6', '#F59E0B', '#6B7280'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            // Method Distribution Chart
+            const methodCtx = document.getElementById('methodChart').getContext('2d');
+            methodChart = new Chart(methodCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Keywords', 'Agentic AI', 'Manual', 'Default'],
+                    datasets: [{
+                        data: [0, 0, 0, 0],
+                        backgroundColor: ['#10B981', '#3B82F6', '#EF4444', '#6B7280']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+
+            // Category Distribution Chart
+            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+            categoryChart = new Chart(categoryCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Cancellation', 'Modify', 'Top Up', 'Withdraw', 'Order Re-Check', 'Pre-Purchase', 'Others'],
+                    datasets: [{
+                        label: 'Tickets',
+                        data: [0, 0, 0, 0, 0, 0, 0],
+                        backgroundColor: '#3B82F6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            // Trends Chart
+            const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+            trendsChart = new Chart(trendsCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Automation Rate (%)',
+                        data: [],
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Accuracy Rate (%)',
+                        data: [],
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true, max: 100 }
+                    }
+                }
+            });
+
+            // Confidence Distribution Chart
+            const confidenceCtx = document.getElementById('confidenceChart').getContext('2d');
+            confidenceChart = new Chart(confidenceCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['0-30%', '30-50%', '50-70%', '70-100%'],
+                    datasets: [{
+                        label: 'Tickets',
+                        data: [0, 0, 0, 0],
+                        backgroundColor: ['#DC2626', '#EA580C', '#CA8A04', '#16A34A'],
+                        borderColor: ['#B91C1C', '#C2410C', '#A16207', '#15803D'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: true }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
         // Function to update dashboard with data
         function updateDashboard(data) {
-            // Update statistics
-            document.getElementById('total-tickets').textContent = data.stats.total;
-            document.getElementById('open-tickets').textContent = data.stats.open;
-            document.getElementById('closed-tickets').textContent = data.stats.closed;
-            document.getElementById('avg-confidence').textContent = data.stats.avg_confidence;
+            const stats = data.stats;
+
+            // Update enhanced statistics cards
+            document.getElementById('total-tickets').textContent = stats.total_tickets || 0;
+            document.getElementById('recent-tickets').textContent = `+${stats.recent_tickets_24h || 0} in 24h`;
+            document.getElementById('automation-rate').textContent = stats.automation_metrics?.automation_rate || '0%';
+            document.getElementById('automated-count').textContent = `${stats.automation_metrics?.automated_count || 0} automated`;
+            document.getElementById('avg-confidence').textContent = stats.confidence_stats?.average || '0%';
+            document.getElementById('confidence-range').textContent = `${stats.confidence_stats?.min || '0%'} - ${stats.confidence_stats?.max || '0%'}`;
+            document.getElementById('high-confidence-rate').textContent = stats.confidence_stats?.high_confidence_rate || '0%';
+            document.getElementById('open-tickets').textContent = stats.status_distribution?.open || 0;
+            document.getElementById('open-percentage').textContent = `${stats.total_tickets ? ((stats.status_distribution?.open || 0) / stats.total_tickets * 100).toFixed(1) : 0}% of total`;
+            document.getElementById('untagged-rate-card').textContent = stats.tagging_quality?.untagged_rate || '0%';
+            document.getElementById('tagged-count').textContent = `${stats.tagging_quality?.tagged_tickets || 0} tagged`;
+
+            // Update KPI sections
+            document.getElementById('north-star-value').textContent = stats.automation_metrics?.automation_rate || '0%';
+            document.getElementById('high-confidence').textContent = stats.confidence_stats?.high_confidence_rate || '0%';
+            document.getElementById('avg-accuracy').textContent = stats.confidence_stats?.average || '0%';
+            document.getElementById('untagged-rate').textContent = stats.tagging_quality?.untagged_rate || '0%';
 
             // Update service distribution
-            const serviceDist = data.service_distribution;
+            const serviceDist = stats.service_distribution || {};
             document.getElementById('flight-count').textContent = serviceDist.Flight || 0;
             document.getElementById('hotel-count').textContent = serviceDist.Hotel || 0;
             document.getElementById('visa-count').textContent = serviceDist.Visa || 0;
             document.getElementById('esim-count').textContent = serviceDist.eSIM || 0;
             document.getElementById('wallet-count').textContent = serviceDist.Wallet || 0;
 
+            // Update method distribution
+            const methodDist = stats.method_distribution || {};
+            document.getElementById('keywords-count').textContent = methodDist.keywords || 0;
+            document.getElementById('agentic-count').textContent = methodDist.agentic || 0;
+            document.getElementById('manual-count').textContent = methodDist.manual || 0;
+            document.getElementById('default-count').textContent = methodDist.default || 0;
+
+            // Update category distribution
+            const categoryDist = stats.category_distribution || {};
+            document.getElementById('cancellation-count').textContent = categoryDist.Cancellation || 0;
+            document.getElementById('modify-count').textContent = categoryDist.Modify || 0;
+            document.getElementById('topup-count').textContent = categoryDist['Top Up'] || 0;
+            document.getElementById('withdraw-count').textContent = categoryDist.Withdraw || 0;
+            document.getElementById('recheck-count').textContent = categoryDist['Order Re-Check'] || 0;
+            document.getElementById('prepurchase-count').textContent = categoryDist['Pre-Purchase'] || 0;
+            document.getElementById('others-count').textContent = categoryDist.Others || 0;
+
+            // Update charts
+            updateCharts(stats);
+
             // Update tickets table
+            updateTicketsTable(data.tickets);
+
+            // Update corner cases data if available
+            if (data.corner_cases) {
+                updateCornerCases(data.corner_cases);
+            }
+        }
+
+        function updateCharts(stats) {
+            if (!serviceChart || !methodChart || !categoryChart) return;
+
+            // Update service chart
+            const serviceData = [
+                stats.service_distribution?.Flight || 0,
+                stats.service_distribution?.Hotel || 0,
+                stats.service_distribution?.Visa || 0,
+                stats.service_distribution?.eSIM || 0,
+                stats.service_distribution?.Wallet || 0,
+                stats.service_distribution?.Other || 0
+            ];
+            serviceChart.data.datasets[0].data = serviceData;
+            serviceChart.update();
+
+            // Update method chart
+            const methodData = [
+                stats.method_distribution?.keywords || 0,
+                stats.method_distribution?.agentic || 0,
+                stats.method_distribution?.manual || 0,
+                stats.method_distribution?.default || 0
+            ];
+            methodChart.data.datasets[0].data = methodData;
+            methodChart.update();
+
+            // Update category chart
+            const categoryData = [
+                stats.category_distribution?.Cancellation || 0,
+                stats.category_distribution?.Modify || 0,
+                stats.category_distribution?.['Top Up'] || 0,
+                stats.category_distribution?.Withdraw || 0,
+                stats.category_distribution?.['Order Re-Check'] || 0,
+                stats.category_distribution?.['Pre-Purchase'] || 0,
+                stats.category_distribution?.Others || 0
+            ];
+            categoryChart.data.datasets[0].data = categoryData;
+            categoryChart.update();
+        }
+
+        function updateTicketsTable(tickets) {
             const tbody = document.querySelector('#tickets-table tbody');
-            if (data.tickets.length === 0) {
+            if (!tickets || tickets.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                        <td colspan="9" class="px-4 py-8 text-center text-gray-500">
                             No tickets found. Create some tickets to see them here.
                         </td>
                     </tr>
                 `;
             } else {
-                tbody.innerHTML = data.tickets.map(ticket => `
-                    <tr class="hover:bg-gray-50">
+                tbody.innerHTML = tickets.map(ticket => `
+                    <tr class="hover:bg-gray-50 ${ticket.is_corner_case ? 'bg-red-50 border-l-4 border-red-400' : ''}">
                         <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                             ${ticket.ticket_id}
+                            ${ticket.is_corner_case ? '<span class="ml-2 text-red-500">⚠️</span>' : ''}
                         </td>
                         <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                             ${ticket.conversation_id}
@@ -178,6 +623,14 @@
                         </td>
                         <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
                             ${ticket.confidence}
+                            ${parseFloat(ticket.confidence) < 0.5 ? '<span class="ml-1 text-red-500">⚠️</span>' : ''}
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                getMethodColor(ticket.method)
+                            }">
+                                ${ticket.method}
+                            </span>
                         </td>
                         <td class="px-4 py-2 whitespace-nowrap">
                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
@@ -186,11 +639,153 @@
                                 ${ticket.status}
                             </span>
                         </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            ${ticket.issues && ticket.issues.length > 0 ?
+                                ticket.issues.map(issue => `<span class="px-2 py-1 text-xs rounded-full ${getIssueColor(issue)} mr-1">${issue}</span>`).join('') :
+                                '<span class="text-gray-400">None</span>'}
+                        </td>
                         <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
                             ${ticket.updated_at}
                         </td>
                     </tr>
                 `).join('');
+            }
+        }
+
+        function getMethodColor(method) {
+            switch(method) {
+                case 'keywords': return 'bg-green-100 text-green-800';
+                case 'agentic': return 'bg-blue-100 text-blue-800';
+                case 'manual': return 'bg-red-100 text-red-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        // Corner Cases Functions
+        function updateCornerCases(cornerCases) {
+            // Update corner case alert section
+            document.getElementById('corner-case-rate').textContent = cornerCases.corner_case_rate || '0%';
+            document.getElementById('corner-case-count').textContent = cornerCases.total_corner_cases || 0;
+
+            // Update detailed corner case metrics
+            const breakdown = cornerCases.breakdown || {};
+            document.getElementById('low-confidence-count').textContent = breakdown.low_confidence?.count || 0;
+            document.getElementById('low-confidence-rate').textContent = breakdown.low_confidence?.rate || '0%';
+            document.getElementById('default-fallback-count').textContent = breakdown.default_fallback?.count || 0;
+            document.getElementById('default-fallback-rate').textContent = breakdown.default_fallback?.rate || '0%';
+            document.getElementById('missing-classification-count').textContent = breakdown.missing_classifications?.count || 0;
+            document.getElementById('missing-classification-rate').textContent = breakdown.missing_classifications?.rate || '0%';
+            document.getElementById('critical-count').textContent = cornerCases.severity_levels?.critical || 0;
+
+            // Update confidence distribution
+            const confidenceDist = cornerCases.confidence_distribution || {};
+            document.getElementById('very-low-count').textContent = confidenceDist.very_low_0_30 || 0;
+            document.getElementById('low-count').textContent = confidenceDist.low_30_50 || 0;
+            document.getElementById('medium-count').textContent = confidenceDist.medium_50_70 || 0;
+            document.getElementById('high-count').textContent = confidenceDist.high_70_100 || 0;
+
+            // Update confidence chart
+            if (confidenceChart) {
+                confidenceChart.data.datasets[0].data = [
+                    confidenceDist.very_low_0_30 || 0,
+                    confidenceDist.low_30_50 || 0,
+                    confidenceDist.medium_50_70 || 0,
+                    confidenceDist.high_70_100 || 0
+                ];
+                confidenceChart.update();
+            }
+        }
+
+        function toggleCornerCases() {
+            cornerCasesMode = !cornerCasesMode;
+            const cornerCasesSection = document.getElementById('corner-cases-section');
+            const cornerCasesCharts = document.getElementById('corner-cases-charts');
+
+            if (cornerCasesMode) {
+                cornerCasesSection.classList.remove('hidden');
+                cornerCasesCharts.classList.remove('hidden');
+                fetchCornerCaseDetails();
+            } else {
+                cornerCasesSection.classList.add('hidden');
+                cornerCasesCharts.classList.add('hidden');
+            }
+        }
+
+        async function fetchCornerCaseDetails() {
+            try {
+                const response = await fetch('/dashboard/api/corner-cases/detailed');
+                const data = await response.json();
+
+                if (data.problematic_tickets) {
+                    updateProblematicTicketsTable(data.problematic_tickets);
+                }
+            } catch (error) {
+                console.error('Error fetching corner case details:', error);
+            }
+        }
+
+        function updateProblematicTicketsTable(tickets) {
+            const tbody = document.querySelector('#problematic-tickets-table tbody');
+            if (!tickets || tickets.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-4 py-4 text-center text-gray-500">
+                            No problematic tickets found.
+                        </td>
+                    </tr>
+                `;
+            } else {
+                tbody.innerHTML = tickets.map(ticket => `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-900">
+                            ${ticket.ticket_id}
+                        </td>
+                        <td class="px-2 py-2 text-sm text-gray-900">
+                            <div class="flex flex-wrap gap-1">
+                                ${ticket.issues.map(issue => `
+                                    <span class="px-2 py-1 text-xs rounded-full ${getIssueColor(issue)}">
+                                        ${issue}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </td>
+                        <td class="px-2 py-2 whitespace-nowrap text-sm text-gray-900">
+                            ${ticket.confidence}
+                        </td>
+                        <td class="px-2 py-2 text-sm text-gray-500 truncate max-w-xs">
+                            ${ticket.message_preview}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function getIssueColor(issue) {
+            switch(issue.toLowerCase()) {
+                case 'low confidence': return 'bg-red-100 text-red-800';
+                case 'default fallback': return 'bg-orange-100 text-orange-800';
+                case 'missing service type': return 'bg-yellow-100 text-yellow-800';
+                case 'missing category': return 'bg-yellow-100 text-yellow-800';
+                case 'very long conversation': return 'bg-purple-100 text-purple-800';
+                case 'very short message': return 'bg-gray-100 text-gray-800';
+                case 'no user messages': return 'bg-red-100 text-red-800';
+                default: return 'bg-gray-100 text-gray-800';
+            }
+        }
+
+        function toggleKPIMode() {
+            kpiMode = !kpiMode;
+            const northStarSection = document.getElementById('north-star-section');
+            const secondaryKPIs = document.getElementById('secondary-kpis');
+
+            if (kpiMode) {
+                northStarSection.classList.remove('hidden');
+                secondaryKPIs.classList.remove('hidden');
+                document.querySelector('button').textContent = '📊 Standard View';
+            } else {
+                northStarSection.classList.add('hidden');
+                secondaryKPIs.classList.add('hidden');
+                document.querySelector('button').textContent = '📊 KPI Focus';
             }
         }
 
@@ -205,12 +800,47 @@
             }
         }
 
-        // Auto-refresh tickets every 30 seconds
-        setInterval(fetchDashboardData, 30000);
+        // Function to fetch trends data
+        async function fetchTrendsData() {
+            try {
+                const response = await fetch('/dashboard/api/analytics/trends');
+                const trendsData = await response.json();
 
-        // Initial load
+                if (trendsChart) {
+                    trendsChart.data.labels = trendsData.automation_trend.map(item => item.date);
+                    trendsChart.data.datasets[0].data = trendsData.automation_trend.map(item => item.value);
+                    trendsChart.data.datasets[1].data = trendsData.accuracy_trend.map(item => item.value);
+                    trendsChart.update();
+                }
+            } catch (error) {
+                console.error('Error fetching trends data:', error);
+            }
+        }
+
+        // Initialize everything on page load
         document.addEventListener('DOMContentLoaded', function() {
+            initializeCharts();
             fetchDashboardData();
+            fetchTrendsData();
+
+            // Auto-refresh data every 30 seconds
+            setInterval(() => {
+                fetchDashboardData();
+                fetchTrendsData();
+            }, 30000);
+        });
+
+        // Add table header for corner case column
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add corner case column header dynamically
+            const headerRow = document.querySelector('#tickets-table thead tr');
+            if (headerRow) {
+                const cornerCaseHeader = document.createElement('th');
+                cornerCaseHeader.className = 'px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+                cornerCaseHeader.textContent = 'Issues';
+                // Insert before the last column (Updated)
+                headerRow.insertBefore(cornerCaseHeader, headerRow.lastElementChild);
+            }
         });
     </script>
 </body>
