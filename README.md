@@ -2,6 +2,72 @@
 
 An intelligent automated ticket tagging and routing service with layered architecture, powered by AI agents using OpenAI Agents SDK. Provides real-time, context-aware classification with modern Python practices and comprehensive monitoring.
 
+## 📋 Problem Analysis (Phase 1)
+
+### Current State
+- **Manual Agent Tagging**: Customer service agents manually apply two tags per ticket:
+  - **Service Type**: Flight, Hotel, Visa, eSIM, Wallet, Other
+  - **Category**: Cancellation, Modify, Top Up, Withdraw, Order Re-Check, Pre-Purchase, Others
+- **Pain Points Identified**:
+  - Misapplied tags causing poor analytics and incorrect routing
+  - Agent fatigue leading to inconsistent tagging quality
+  - Ambiguous category definitions creating confusion
+  - UI/UX friction in the manual tagging process
+  - Lack of standardized training on tag definitions
+
+### Root Cause Analysis
+
+#### 1. Human Error Factors
+- **Cognitive Load**: Agents handling multiple conversations simultaneously
+- **Time Pressure**: Need to resolve tickets quickly to meet SLAs
+- **Subjective Interpretation**: Categories open to personal interpretation
+- **Context Switching**: Constantly switching between different service types
+
+#### 2. System Design Issues
+- **No Real-time Guidance**: Agents lack immediate feedback on tag accuracy
+- **Overlapping Definitions**: Similar categories cause confusion
+- **No Validation**: No system checks for tag consistency
+- **Training Gaps**: Inconsistent understanding across agents
+
+#### 3. Process Inefficiencies
+- **Manual Process**: Every ticket requires manual tagging effort
+- **Quality Assurance**: Limited ability to validate tag accuracy
+- **Feedback Loop**: No mechanism to improve tagging over time
+- **Scalability**: Manual process doesn't scale with volume growth
+
+### Impact Assessment
+- **Business Impact**: Poor analytics leading to wrong business decisions
+- **Customer Experience**: Incorrect routing causing longer resolution times
+- **Agent Productivity**: Time spent on tagging vs customer service
+- **Operational Costs**: Increased handling time and reduced efficiency
+
+## 🎯 Solution Design
+
+### Core Objectives
+1. **Automate Tagging**: Eliminate manual tagging while maintaining accuracy
+2. **Improve Consistency**: Standardize tagging across all agents
+3. **Enhance Speed**: Reduce resolution time through better routing
+4. **Enable Analytics**: Provide reliable data for business decisions
+
+### Architecture Approach
+- **Layered Architecture**: Clean separation of concerns using Domain-Driven Design
+- **Two-Layer Tagging**: Keywords (fast) + AI Agent (accurate)
+- **Real-time Processing**: Immediate classification and routing
+- **Monitoring & Feedback**: Built-in analytics and improvement mechanisms
+
+### Technology Stack
+- **AI Engine**: OpenAI Agents SDK for intelligent conversation analysis
+- **Backend**: FastAPI with async support for high performance
+- **Database**: SQLite with SQLAlchemy for reliable data persistence
+- **Frontend**: Web dashboard for real-time monitoring
+- **Deployment**: Docker for consistent environments
+
+### Success Criteria
+- **Accuracy Target**: >85% tagging accuracy
+- **Performance**: <2 second response time
+- **Reliability**: 99.9% uptime
+- **Scalability**: Handle 1000+ tickets per hour
+
 ## 🎯 Overview
 
 Sindibad is a sophisticated ticket tagging system designed to automatically classify customer service conversations across multiple service types and categories. The system uses a layered architecture with AI-powered semantic analysis to ensure accurate, consistent tagging while maintaining high performance and developer experience.
@@ -14,6 +80,64 @@ Sindibad is a sophisticated ticket tagging system designed to automatically clas
 - 🔄 **Two-Layer Tagging**: Keywords (Layer 1) + Agentic AI (Layer 2)
 - 🚀 **Modern Python Stack**: FastAPI, UV package manager, comprehensive testing
 - 📈 **Performance Monitoring**: Confidence scoring, success rates, and detailed analytics
+
+## 📊 North Star Metrics (Phase 3)
+
+### Primary North Star Metric
+**🎯 Tagging Accuracy Rate**
+- **Definition**: Percentage of tickets with correct service_type AND category tags
+- **Target**: >85% accuracy in first month, >95% within 3 months
+- **Measurement**: Manual audit of 100 random tickets weekly + automated validation
+
+### Justification
+1. **Business Impact**: Directly correlates with routing efficiency and analytics reliability
+2. **Customer Experience**: Accurate tags → faster resolution times → higher satisfaction
+3. **Operational Efficiency**: Correct classification → proper agent assignment → reduced handling time
+4. **Data Quality**: Reliable tags enable data-driven business decisions
+5. **Scalability**: Foundation metric that supports all other improvements
+
+### Secondary Metrics
+
+#### 1. Agent Override Rate
+- **Definition**: % of tickets where agents modify auto-applied tags
+- **Target**: <15% override rate
+- **Justification**: Measures system reliability and agent trust
+
+#### 2. Time-to-Resolution Improvement
+- **Definition**: Average time from ticket creation to resolution
+- **Target**: 20% improvement from baseline
+- **Justification**: Shows routing efficiency gains and customer satisfaction impact
+
+#### 3. Tag Consistency Score
+- **Definition**: Variance in tagging for similar ticket types
+- **Target**: >95% consistency for identical patterns
+- **Justification**: Ensures reliable analytics and reporting
+
+#### 4. Processing Speed
+- **Definition**: Average time to tag a conversation
+- **Target**: <1.5 seconds for keyword layer, <3 seconds for AI layer
+- **Justification**: Enables real-time processing and user experience
+
+#### 5. System Reliability
+- **Definition**: Uptime percentage and error rates
+- **Target**: 99.9% uptime, <0.1% error rate
+- **Justification**: Ensures production readiness and user trust
+
+### Metric Hierarchy
+```
+🎯 North Star: Tagging Accuracy Rate
+├── 📈 Secondary: Agent Override Rate
+├── ⚡ Secondary: Processing Speed
+├── 🔄 Secondary: Time-to-Resolution
+├── 📊 Secondary: Tag Consistency Score
+└── 🛡️ Secondary: System Reliability
+```
+
+### Measurement Approach
+- **Daily Monitoring**: Automated metrics collection
+- **Weekly Reports**: Manual accuracy audits and trend analysis
+- **Monthly Reviews**: Business impact assessment
+- **Quarterly Planning**: Goal adjustments based on performance data
 
 ## 🏗️ Architecture
 
@@ -81,85 +205,95 @@ The system classifies tickets into:
 - ❓ **Pre-Purchase**: Information requests, guidance, how-to questions
 - 📝 **Others**: General inquiries, miscellaneous requests
 
-## 🚀 Quick Start
+## 🚀 Quick Start Guide
 
 ### Prerequisites
-- Python 3.12+
-- [UV package manager](https://docs.astral.sh/uv/getting-started/installation/) (recommended)
-- OpenAI API Key (optional, for AI features)
+- **Python 3.12+** - Required runtime environment
+- **UV Package Manager** - [Install UV](https://docs.astral.sh/uv/getting-started/installation/) (recommended)
+- **OpenAI API Key** - Optional, for AI-powered tagging features
 
-### Option 1: Docker (Recommended for Production)
+### Step-by-Step Setup Instructions
+
+#### Option 1: Docker (Recommended for Production)
 
 ```bash
-# Clone the repository
+# Step 1: Clone the repository
 git clone <repository-url>
 cd sindibad-task
 
-# Copy environment template
+# Step 2: Create environment file
 cp .env.example .env
 
-# Edit .env file with your OpenAI API key
+# Step 3: Configure OpenAI API key (optional)
+# Edit .env file:
 # OPENAI_API_KEY=sk-your-openai-api-key-here
 
-# Build and run with Docker Compose
+# Step 4: Build and run the application
 docker-compose up --build
 
-# Service available at:
-# - API Documentation: http://localhost:8000/api/docs
-# - Dashboard: http://localhost:8000/dashboard
-# - Health Check: http://localhost:8000/api/health
+# Step 5: Verify installation
+curl http://localhost:8000/api/health
 ```
 
-### Option 2: UV (Recommended for Development)
+**✅ Service URLs:**
+- **API Documentation**: http://localhost:8000/api/docs
+- **Dashboard**: http://localhost:8000/dashboard
+- **Health Check**: http://localhost:8000/api/health
+
+#### Option 2: UV (Recommended for Development)
 
 ```bash
-# Clone the repository
+# Step 1: Clone repository
 git clone <repository-url>
 cd sindibad-task
 
-# Install Python 3.12 (if not available)
+# Step 2: Install Python 3.12 (if needed)
 uv python install 3.12
 
-# Sync dependencies and create virtual environment
+# Step 3: Sync dependencies and create virtual environment
 uv sync
 
-# Set OpenAI API key (optional)
+# Step 4: Configure environment (optional)
 export OPENAI_API_KEY="sk-your-openai-api-key-here"
 
-# Run the service
+# Step 5: Run the application
 uv run python main.py
 
-# Or run with hot reload for development
+# Alternative: Development mode with hot reload
 uv run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Option 3: Traditional pip
+#### Option 3: Traditional pip
 
 ```bash
-# Clone the repository
+# Step 1: Clone repository
 git clone <repository-url>
 cd sindibad-task
 
-# Create and activate virtual environment
+# Step 2: Create virtual environment
 python3.12 -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
 
-# Install dependencies
+# Step 3: Activate virtual environment
+source venv/bin/activate  # Linux/Mac
+# OR
+venv\Scripts\activate     # Windows
+
+# Step 4: Install dependencies
 pip install -r requirements.txt
 
-# Set OpenAI API key (optional)
+# Step 5: Configure environment (optional)
 export OPENAI_API_KEY="sk-your-openai-api-key-here"
 
-# Run the service
+# Step 6: Run the application
 python main.py
 ```
 
-### 🔑 Configuration
+### 🔧 Configuration
 
-Create a `.env` file in the project root:
+Create a `.env` file in the project root directory:
 
 ```bash
-# OpenAI Configuration (optional)
+# OpenAI Configuration (optional - enables AI features)
 OPENAI_API_KEY=sk-your-openai-api-key-here
 
 # Application Settings
@@ -169,34 +303,64 @@ DEBUG=true
 # Database Settings
 DATABASE_URL=sqlite+aiosqlite:///./tickets.db
 
-# Logging
+# Logging Configuration
 LOG_LEVEL=INFO
 ```
 
-### Verify Installation
+### ✅ Verification Steps
 
 ```bash
-# Health check
+# 1. Check service health
 curl http://localhost:8000/api/health
 
-# API documentation (interactive)
+# 2. Access interactive API documentation
 open http://localhost:8000/api/docs
 
-# Dashboard
+# 3. View real-time dashboard
 open http://localhost:8000/dashboard
+
+# 4. Test basic API functionality
+curl -X GET "http://localhost:8000/api/tickets?limit=5"
 ```
 
-## 🔌 API Reference
+### 🔍 Troubleshooting
 
-The Sindibad service provides a comprehensive REST API with interactive documentation at `/api/docs`.
+**Common Issues:**
+- **Port 8000 already in use**: Change port with `uvicorn src.main:app --port 8001`
+- **OpenAI API key issues**: Check `.env` file format and API key validity
+- **Database errors**: Ensure write permissions in project directory
+- **Python version**: Verify Python 3.12+ with `python --version`
 
-### Core Endpoints
+**Logs:**
+```bash
+# View application logs
+uv run python main.py
 
-#### Process Messages (Webhook)
+# Docker logs
+docker-compose logs -f sindibad-tagging-service
+```
+
+## 🔌 API Usage Guide
+
+The Sindibad service provides a comprehensive REST API. Access interactive documentation at `http://localhost:8000/api/docs`.
+
+### 🚀 Getting Started with APIs
 
 ```bash
-# Create or update ticket with new messages
-curl -X POST "http://localhost:8000/api/webhooks/messages" \
+# Base URL
+BASE_URL="http://localhost:8000"
+
+# Health check
+curl -X GET "$BASE_URL/api/health"
+```
+
+### 📨 Core Ticket Operations
+
+#### 1. Process New Messages (Main Webhook)
+
+```bash
+# Create a new ticket with customer message
+curl -X POST "$BASE_URL/api/webhooks/messages" \
   -H "Content-Type: application/json" \
   -d '{
     "conversation_id": "conv_12345",
@@ -210,66 +374,194 @@ curl -X POST "http://localhost:8000/api/webhooks/messages" \
   }'
 ```
 
-#### Ticket Management
-
-```bash
-# List all tickets with pagination
-curl -X GET "http://localhost:8000/api/tickets?limit=20&offset=0"
-
-# Get specific ticket
-curl -X GET "http://localhost:8000/api/tickets/{ticket_id}"
-
-# Update ticket status
-curl -X PUT "http://localhost:8000/api/tickets/{ticket_id}/status?status=closed"
-
-# Get ticket statistics
-curl -X GET "http://localhost:8000/api/stats"
+**Response:**
+```json
+{
+  "ticket_id": "550e8400-e29b-41d4-a716-446655440000",
+  "conversation_id": "conv_12345",
+  "service_type": "Flight",
+  "category": "Cancellation",
+  "confidence": 0.95,
+  "method": "agentic",
+  "status": "open",
+  "message_count": 1
+}
 ```
 
-#### Tag Explanations
+#### 2. Retrieve Tickets
 
 ```bash
-# Get explanation for ticket tags
-curl -X GET "http://localhost:8000/api/tickets/{ticket_id}/tags/explain"
+# Get all tickets with pagination
+curl -X GET "$BASE_URL/api/tickets?limit=10&offset=0"
+
+# Get specific ticket by ID
+curl -X GET "$BASE_URL/api/tickets/550e8400-e29b-41d4-a716-446655440000"
+
+# Get ticket statistics
+curl -X GET "$BASE_URL/api/stats"
+```
+
+#### 3. Update Ticket Status
+
+```bash
+# Mark ticket as closed
+curl -X PUT "$BASE_URL/api/tickets/550e8400-e29b-41d4-a716-446655440000/status?status=closed"
+
+# Mark ticket as pending
+curl -X PUT "$BASE_URL/api/tickets/550e8400-e29b-41d4-a716-446655440000/status?status=pending"
+```
+
+#### 4. Get Tag Explanations
+
+```bash
+# Understand why specific tags were applied
+curl -X GET "$BASE_URL/api/tickets/550e8400-e29b-41d4-a716-446655440000/tags/explain"
+```
+
+**Response:**
+```json
+{
+  "ticket_id": "550e8400-e29b-41d4-a716-446655440000",
+  "service_type": "Flight",
+  "category": "Cancellation",
+  "confidence": 0.95,
+  "explanation": "Detected keywords: 'cancelled', 'rebook' in flight context",
+  "method": "agentic",
+  "timestamp": "2025-01-15T14:30:00Z"
+}
 ```
 
 ### 🤖 AI Agent Endpoints
 
-The system includes dedicated endpoints for AI-powered analysis:
+#### Direct Text Analysis
 
 ```bash
-# Direct text tagging (development/testing)
-curl -X POST "http://localhost:8000/agentic/tag-text" \
+# Test AI agent with direct text
+curl -X POST "$BASE_URL/agentic/tag-text" \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "text=I need to cancel my hotel booking and rebook my flight"
+  -d "text=I want to cancel my hotel booking and get a refund"
+```
 
-# Conversation tagging with session continuity
-curl -X POST "http://localhost:8000/agentic/tag-conversation" \
+#### Conversation Analysis with Session
+
+```bash
+# Analyze multi-message conversation
+curl -X POST "$BASE_URL/agentic/tag-conversation" \
   -H "Content-Type: application/json" \
   -d '{
-    "messages": ["I want to book a flight", "Actually, I need to cancel it instead"],
+    "messages": [
+      "Hi, I need help with my flight",
+      "It was cancelled and I want to rebook",
+      "Also need to cancel the hotel I booked"
+    ],
     "session_id": "user_12345"
   }'
+```
 
-# Get AI agent performance metrics
-curl -X GET "http://localhost:8000/agentic/metrics"
+#### AI Performance Monitoring
 
-# Explain AI agent analysis decisions
-curl -X POST "http://localhost:8000/agentic/explain-tagging" \
+```bash
+# Get AI agent metrics
+curl -X GET "$BASE_URL/agentic/metrics"
+
+# Reset performance metrics
+curl -X POST "$BASE_URL/agentic/reset-metrics"
+```
+
+#### AI Decision Explanations
+
+```bash
+# Get detailed explanation of AI analysis
+curl -X POST "$BASE_URL/agentic/explain-tagging" \
   -H "Content-Type: application/json" \
   -d '{
     "messages": ["My flight was cancelled, help me rebook"]
   }'
-
-# Reset AI agent metrics
-curl -X POST "http://localhost:8000/agentic/reset-metrics"
 ```
 
-### 📊 Dashboard Endpoints
+### 📊 Dashboard & Monitoring
+
+#### Real-time Data
 
 ```bash
-# Real-time ticket updates (used by dashboard)
-curl -X GET "http://localhost:8000/dashboard/api/tickets/realtime"
+# Get real-time ticket updates for dashboard
+curl -X GET "$BASE_URL/dashboard/api/tickets/realtime"
+```
+
+### 🧪 Complete API Workflow Example
+
+```bash
+#!/bin/bash
+
+# 1. Check service health
+echo "🔍 Checking service health..."
+curl -s "$BASE_URL/api/health" | jq .
+
+# 2. Create a new ticket
+echo "📝 Creating new ticket..."
+TICKET_RESPONSE=$(curl -s -X POST "$BASE_URL/api/webhooks/messages" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "conversation_id": "workflow_demo_001",
+    "timestamp": "2025-01-15T10:00:00Z",
+    "messages": [{"text": "I need to cancel my flight booking", "sender": "user"}]
+  }')
+
+echo "Ticket created:"
+echo "$TICKET_RESPONSE" | jq .
+
+# 3. Extract ticket ID
+TICKET_ID=$(echo "$TICKET_RESPONSE" | jq -r '.ticket_id')
+
+# 4. Get ticket details
+echo "📋 Getting ticket details..."
+curl -s "$BASE_URL/api/tickets/$TICKET_ID" | jq .
+
+# 5. Get tag explanation
+echo "🧠 Getting tag explanation..."
+curl -s "$BASE_URL/api/tickets/$TICKET_ID/tags/explain" | jq .
+
+# 6. Update ticket status
+echo "✅ Updating ticket status..."
+curl -s -X PUT "$BASE_URL/api/tickets/$TICKET_ID/status?status=closed" | jq .
+
+# 7. Get system statistics
+echo "📊 Getting system statistics..."
+curl -s "$BASE_URL/api/stats" | jq .
+```
+
+### 📝 API Response Codes
+
+- **200**: Success
+- **201**: Created
+- **400**: Bad Request (invalid input)
+- **404**: Not Found (ticket doesn't exist)
+- **422**: Validation Error
+- **500**: Internal Server Error
+
+### 🔐 Authentication
+
+Currently, the API doesn't require authentication. In production, consider adding:
+- API Key authentication
+- JWT tokens
+- OAuth 2.0
+
+### 📋 Rate Limiting
+
+- Default: 100 requests per minute per IP
+- Configurable via environment variables
+- Applies to all endpoints except health checks
+
+### 🐛 Error Handling
+
+All endpoints return structured error responses:
+
+```json
+{
+  "detail": "Error description",
+  "error_code": "ERROR_TYPE",
+  "timestamp": "2025-01-15T10:00:00Z"
+}
 ```
 
 ## 💡 Example Use Cases
