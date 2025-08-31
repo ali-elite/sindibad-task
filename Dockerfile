@@ -24,6 +24,7 @@ COPY src/ ./src/
 COPY main.py .
 COPY pyproject.toml .
 COPY README.md .
+COPY .env* ./
 
 # Create non-root user
 RUN adduser --disabled-password --gecos '' appuser && \

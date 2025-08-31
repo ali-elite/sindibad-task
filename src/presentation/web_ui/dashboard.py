@@ -28,6 +28,11 @@ def create_dashboard_app() -> FastAPI:
         """Main dashboard page."""
         return templates.TemplateResponse("index.html", {"request": request})
 
+    @dashboard_app.get("/chat", response_class=HTMLResponse)
+    async def chat_interface(request: Request):
+        """Chat service mock interface."""
+        return templates.TemplateResponse("chat.html", {"request": request})
+
     @dashboard_app.get("/api/tickets/realtime")
     async def get_realtime_tickets():
         """Endpoint for real-time ticket updates."""
