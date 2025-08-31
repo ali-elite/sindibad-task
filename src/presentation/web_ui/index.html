@@ -71,7 +71,7 @@
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-semibold text-gray-800">Recent Tickets</h2>
                 <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-                        hx-get="/api/tickets/realtime"
+                        hx-get="/dashboard/api/tickets/realtime"
                         hx-target="#tickets-table"
                         hx-swap="innerHTML">
                     Refresh
@@ -121,20 +121,86 @@
     </div>
 
     <script>
+        // Function to update dashboard with data
+        function updateDashboard(data) {
+            // Update statistics
+            document.getElementById('total-tickets').textContent = data.stats.total;
+            document.getElementById('open-tickets').textContent = data.stats.open;
+            document.getElementById('closed-tickets').textContent = data.stats.closed;
+            document.getElementById('avg-confidence').textContent = data.stats.avg_confidence;
+
+            // Update service distribution
+            const serviceDist = data.service_distribution;
+            document.getElementById('flight-count').textContent = serviceDist.Flight || 0;
+            document.getElementById('hotel-count').textContent = serviceDist.Hotel || 0;
+            document.getElementById('visa-count').textContent = serviceDist.Visa || 0;
+            document.getElementById('esim-count').textContent = serviceDist.eSIM || 0;
+            document.getElementById('wallet-count').textContent = serviceDist.Wallet || 0;
+
+            // Update tickets table
+            const tbody = document.querySelector('#tickets-table tbody');
+            if (data.tickets.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                            No tickets found. Create some tickets to see them here.
+                        </td>
+                    </tr>
+                `;
+            } else {
+                tbody.innerHTML = data.tickets.map(ticket => `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            ${ticket.ticket_id}
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            ${ticket.conversation_id}
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                ${ticket.service_type}
+                            </span>
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                ${ticket.category}
+                            </span>
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">
+                            ${ticket.confidence}
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                ticket.status === 'open' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'
+                            }">
+                                ${ticket.status}
+                            </span>
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
+                            ${ticket.updated_at}
+                        </td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // Function to fetch and update dashboard data
+        async function fetchDashboardData() {
+            try {
+                const response = await fetch('/dashboard/api/tickets/realtime');
+                const data = await response.json();
+                updateDashboard(data);
+            } catch (error) {
+                console.error('Error fetching dashboard data:', error);
+            }
+        }
+
         // Auto-refresh tickets every 30 seconds
-        setInterval(() => {
-            htmx.ajax('GET', '/api/tickets/realtime', {
-                target: '#tickets-table tbody',
-                swap: 'innerHTML'
-            });
-        }, 30000);
+        setInterval(fetchDashboardData, 30000);
 
         // Initial load
         document.addEventListener('DOMContentLoaded', function() {
-            htmx.ajax('GET', '/api/tickets/realtime', {
-                target: '#tickets-table tbody',
-                swap: 'innerHTML'
-            });
+            fetchDashboardData();
         });
     </script>
 </body>
